@@ -1,0 +1,19 @@
+<!doctype html>
+<img src='/static/sketch.jpeg'>
+<ul>
+    {% for key, value in data.items() %}
+        <li> {{ key }} </li>
+        <ul>
+            {% for file in value %}
+                {% set baseUrl = 'http://localhost:3000/showData?filename=' %}
+                {% set link = '' %}
+                {% set link = baseUrl + key + '/' + file %}
+                <li> <a href="{{ link }}">{{ file }}</a>   </li>
+            {% endfor %}
+        </ul>
+        
+    {% endfor %}
+
+</ul>
+    
+ </table>
