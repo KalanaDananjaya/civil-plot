@@ -1,13 +1,13 @@
 <!doctype html>
 <img src='/static/sketch.jpeg'>
 <ul>
-    {% for key, value in data.items() %}
+    {% for key, value in data['nodes'].items() %}
         <li> {{ key }} </li>
         <ul>
             {% for file in value %}
-                {% set baseUrl = 'http://localhost:3000/showData?filename=' %}
+                <!-- {% set baseUrl = 'http://localhost:3000/showData?filename=' %} -->
                 {% set link = '' %}
-                {% set link = baseUrl + key + '/' + file %}
+                {% set link = data['baseUrl'] + key + '/' + file %}
                 <li> <a href="{{ link }}">{{ file }}</a>   </li>
             {% endfor %}
         </ul>

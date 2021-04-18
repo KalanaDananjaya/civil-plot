@@ -6,25 +6,42 @@ import math
 
 from flask import Flask,request
 from flask import render_template
+from flask import send_file
+
 
 pd.set_option('display.max_columns', None)
 
 app = Flask(__name__)
+hostname = "localhost"
+port = "3000"
 
 @app.route('/', methods=['GET'])
 def listFiles():
-    nodes = os.listdir('./static/Data')
+    
     data = {}
+    data['baseUrl'] = "http://" + hostname + ":" + port + "/showData?filename="
+    nodes = os.listdir('./static/Data')
+    
+    data['nodes'] = {}
     for dir in nodes:
         files = os.listdir('./static/Data/'+dir)
         csvs=[]
         for fileName in files:
             if fileName.endswith(".csv"):
                 csvs.append(fileName)
-        data.update({dir:csvs})
-    return render_template('showFiles.html', data=dict(sorted(data.items())))
+        data['nodes'].update({dir:csvs})
+        data['nodes']= dict(sorted(data['nodes'].items()))
+    return render_template('showFiles.html', data=data)
 
-    
+@app.route('/getcsv', methods=['POST'])
+def plot_csv():
+    path = './static/Data/' + request.form['filepath']
+    # return path
+    return send_file(path,
+                     mimetype='text/csv',
+                     attachment_filename='data.csv',
+                     as_attachment=True)
+
 
 def calc(value):
     a = 0
@@ -42,7 +59,7 @@ def avg(list1):
 
 def plotGraph(filepath):
     # Load data
-    data = pd.read_csv('./static/Data/'  +filepath, header=None)
+    data = pd.read_csv('./static/Data/' + filepath, header=None)
     data.columns = ['date', 'time', 'x', 'y', 'z']
 
     #Creating output data file
@@ -54,13 +71,8 @@ def plotGraph(filepath):
     
 
     accx = dataCor.plot(x ='Time', y='AccX', kind = 'line', figsize=(10,4), title='Acceleration Data - Local X-direction',lw=0.5, grid=True, color='Red',label="Acc X - m/s^2").get_figure()
-    accx.savefig('./static/accx.png')
     accy = dataCor.plot(x ='Time', y='AccY', kind = 'line', figsize=(10,4), title='Acceleration Data - Local Y-direction',lw=0.5, grid=True, color='Green',label="Acc Y - m/s^2").get_figure()
-    accy.savefig('./static/accy.png')
     accz = dataCor.plot(x ='Time', y='AccZ', kind = 'line', figsize=(10,4), title='Acceleration Data - Local Z-direction',lw=0.5, grid=True, color='Blue',label="Acc Z - m/s^2").get_figure()
-    accz.savefig('./static/accz.png')
-
-    
 
     #DataSummary
     threesecx=[]
@@ -147,6 +159,13 @@ def plotGraph(filepath):
     Headers=["Start Time","Avg_x(1 sec)","Avg_y(1 sec)","Avg_z(1 sec)","Avg_x(3 sec)","Avg_y(3 sec)","Avg_z(3 sec)","Avg_x(10 sec)","Avg_y(10 sec)","Avg_z(10 sec)","Avg_x","Avg_y","Avg_z"]
     Values=[dataCor.iloc[0:1,0:1],round(avg(onesecx),4),round(avg(onesecy),4),round(avg(onesecz),4),round(avg(threesecx),4),round(avg(threesecy),4),round(avg(threesecz),4),round(avg(tensecx),4),round(avg(tensecy),4),round(avg(tensecz),4),round(xval,4),round(yval,4),round(zval,4)]        
 
+    html0 = "<form method='post' action='http://" + hostname + ":" + port + "/getcsv'>"
+    html0 += """
+            <input type="hidden" name="filepath" value=""" + filepath + """>
+            <input type="submit" value="Download Data File" />
+            </form>"""
+
+            
     html1 = mpld3.fig_to_html(accx)
     html2 = mpld3.fig_to_html(accy)
     html3 = mpld3.fig_to_html(accz)
@@ -167,7 +186,7 @@ def plotGraph(filepath):
 
 
     f = open("./templates/plot.html", "w")
-    f.write(html1 + html2 + html3 + table_html)
+    f.write(html0 + html1 + html2 + html3 + table_html)
     f.close()
     return
 
