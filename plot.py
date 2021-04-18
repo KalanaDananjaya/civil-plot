@@ -12,7 +12,7 @@ from flask import send_file
 pd.set_option('display.max_columns', None)
 
 app = Flask(__name__)
-hostname = "localhost"
+hostname = "0.0.0.0"
 port = "3000"
 
 @app.route('/', methods=['GET'])
@@ -198,4 +198,4 @@ def plot():
     
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000,debug=True)
+    app.run(host=hostname, port=port,debug=True)
